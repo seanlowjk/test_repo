@@ -1,0 +1,37 @@
+name: Update PR Milestones 
+
+on:
+  pull_request:
+    branches: [ master ]
+    types: [ closed ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    if: github.event.pull_request.merged == true
+    steps:
+      - uses: actions/checkout@v2
+
+      # Retrieve the PR Number from the reference branch 
+      # This is stored in the variable $PULL_NUMBER 
+      - name: Retrieve PR Number 
+        env: 
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          ACTIONS_ALLOW_UNSECURE_COMMANDS: 'true'
+        uses: actions/github-script@0.3.0
+        with:
+          github-token: $GH_TOKEN
+          script: |
+            const core = require('@actions/core')
+            const prNumber = context.payload.number;
+            core.exportVariable('PULL_NUMBER', prNumber);
+
+      # Update the PR with the latest milestone. 
+      - name: update-pr-milestone
+        uses: seanlowjk/update-pr-milestone@v0.1.0
+        with: 
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          PR_NUMBER: ${{ env.PULL_NUMBER }}
+          owner: 'seanlowjk'
+          repo: 'test_repo'
